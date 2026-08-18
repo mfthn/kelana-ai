@@ -1,58 +1,25 @@
-import sys
-from pathlib import Path
+from typing import List
+from fastapi import FastAPI
 
-# Memastikan modul services dapat diimpor dengan aman
-sys.path.append(str(Path(__file__).resolve().parent))
-
-from services.trip_service import (
-    get_trip_category,
-    get_travel_season,
-    calculate_daily_budget,
-    get_recommended_places
+app = FastAPI(
+    title="KelanaAI API",
+    description="Backend REST API untuk layanan perjalanan KelanaAI",
+    version="0.1.0"
 )
 
 
-def print_trip_summary(destination, days, budget, currency, travel_month):
-    """Menampilkan hasil ringkasan perjalanan menggunakan f-strings dan looping."""
-    # Memanggil logika bisnis dari services
-    category = get_trip_category(budget)
-    season = get_travel_season(travel_month)
-    daily_budget = calculate_daily_budget(budget, days)
-    places = get_recommended_places(destination)
-
-    # Format angka agar tidak menampilkan desimal jika berupa bilangan bulat
-    formatted_budget = int(budget) if budget.is_integer() else budget
-    formatted_daily_budget = int(daily_budget) if daily_budget.is_integer() else round(daily_budget, 2)
-
-    print("==================================")
-    print("KelanaAI")
-    print("==================================")
-    print(f"Destination   : {destination}")
-    print(f"Days          : {days}")
-    print(f"Budget        : {formatted_budget} {currency}")
-    print(f"Category      : {category}")
-    print(f"Daily Budget  : {formatted_daily_budget} {currency}/Day")
-    print(f"Travel Month  : {travel_month}")
-    print(f"Season        : {season}")
-    print()
-    print("Recommended Places")
-    
-    # Melakukan iterasi menggunakan for loop
-    for place in places:
-        print(f"- {place}")
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to KelanaAI API"}
 
 
-def main():
-    print("=== Masukkan Detail Perjalanan ===")
-    destination = input("Destination  : ")
-    days = int(input("Days         : "))
-    budget = float(input("Budget       : "))
-    currency = input("Currency     : ")
-    travel_month = input("Travel Month : ")
-    
-    print()
-    print_trip_summary(destination, days, budget, currency, travel_month)
+@app.get("/api/v1/recommendations", response_model=List[str])
+def get_recommendations():
+    """Mengembalikan daftar rekomendasi tempat wisata."""
+    return ["Tokyo Tower", "Mount Fuji", "Shibuya"]
 
 
-if __name__ == "__main__":
-    main()
+@app.get("/api/v1/transportations", response_model=List[str])
+def get_transportations():
+    """Mengembalikan daftar pilihan moda transportasi."""
+    return ["Bus", "Train", "Flight"]
