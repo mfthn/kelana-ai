@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 # Menyesuaikan path import
 sys.path.append(str(Path(__file__).resolve().parent))
@@ -26,8 +27,16 @@ app = FastAPI(
     version="0.1.0"
 )
 
+# izinkan request dari frontend Next.js
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# === Endpoint dari Sesi 3 ===
+# === Endpoint ===
 @app.get("/api/v1/recommendations", response_model=List[str])
 def get_recommendations():
     return ["Tokyo Tower", "Mount Fuji", "Shibuya"]
@@ -68,7 +77,7 @@ def get_all_trips(db: Session = Depends(get_db)):
     return db.query(models.Trip).all()
 
 
-# === TUGAS SESI 4: Endpoint PUT & DELETE ===
+# Endpoint PUT & DELETE ===
 
 @app.put("/api/v1/trips/{trip_id}", response_model=schemas.TripResponse)
 def update_trip_budget(trip_id: int, payload: schemas.TripUpdateBudget, db: Session = Depends(get_db)):
@@ -108,3 +117,5 @@ def delete_trip(trip_id: int, db: Session = Depends(get_db)):
     db.delete(trip)
     db.commit()
     return {"message": f"Trip with ID {trip_id} successfully deleted"}
+
+
