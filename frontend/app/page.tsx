@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { generateTrip } from "@/services/tripService";
 
 export default function HomePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     destination: "Kyoto, Japan",
@@ -12,37 +15,45 @@ export default function HomePage() {
     travelMonth: "October",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Verifikasi status login pengguna
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     setLoading(true);
-    // trigger backend trip creation & AI generation
-    setTimeout(() => setLoading(false), 1200);
+
+    try {
+      const createdTrip = await generateTrip({
+        destination: form.destination,
+        days: form.days,
+        budget: form.budget,
+        currency: form.currency,
+        travel_month: form.travelMonth,
+      });
+
+      // Redirect langsung ke halaman detail itinerary yang baru dibuat
+      if (createdTrip && createdTrip.id) {
+        router.push(`/trips/${createdTrip.id}`);
+      } else {
+        router.push("/trips");
+      }
+    } catch (error) {
+      console.error("Gagal menyusun itinerary:", error);
+      alert("Terjadi kesalahan saat membuat rencana perjalanan. Pastikan Anda telah login.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased">
-      {/* top navigation */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm shadow-emerald-500/30">
-              K
-            </div>
-            <span className="font-semibold text-lg tracking-tight text-slate-900">
-              Kelana<span className="text-emerald-600">AI</span>
-            </span>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#explore" className="hover:text-emerald-600 transition-colors">Destinasi</a>
-            <a href="#planner" className="hover:text-emerald-600 transition-colors">Perencana AI</a>
-            <a href="#about" className="hover:text-emerald-600 transition-colors">Tentang</a>
-          </nav>
-        </div>
-      </header>
-
       <main className="flex-1">
-        {/* hero section */}
+        {/* Hero Section */}
         <section className="relative overflow-hidden bg-slate-900 text-white">
           <div className="absolute inset-0 z-0">
             <img
@@ -66,7 +77,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* trip form card (floating overlap on desktop) */}
+        {/* Form Card Section */}
         <section id="planner" className="max-w-5xl mx-auto px-4 sm:px-6 -mt-16 relative z-20 mb-16">
           <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-200/80 p-6 sm:p-8">
             <div className="mb-6">
@@ -75,7 +86,6 @@ export default function HomePage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* responsive grid form */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
@@ -172,7 +182,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* highlight features */}
+        {/* Feature Section */}
         <section id="explore" className="max-w-5xl mx-auto px-4 sm:px-6 mb-20">
           <div className="text-center sm:text-left mb-8">
             <h3 className="text-lg font-bold text-slate-900">Kenapa Memilih KelanaAI?</h3>
@@ -213,8 +223,8 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* footer section */}
-      <footer className="bg-white border-t border-slate-200 text-slate-600 text-sm mt-auto">
+      {/* Footer Section */}
+      <footer id="about" className="bg-white border-t border-slate-200 text-slate-600 text-sm mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">

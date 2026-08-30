@@ -1,16 +1,33 @@
-﻿from sqlalchemy import Column, Integer, String, Float, Text
+﻿from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, BigInteger, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from database import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+
+    trips = relationship("Trip", back_populates="owner", cascade="all, delete-orphan")
+
 
 class Trip(Base):
     __tablename__ = "trips"
 
-    id = Column(Integer, primary_key=True, index=True)
-    destination = Column(String, nullable=False)
+    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    destination = Column(String(255), nullable=False)
     days = Column(Integer, nullable=False)
     budget = Column(Float, nullable=False)
-    currency = Column(String, nullable=False)
-    travel_month = Column(String, nullable=False)
-    category = Column(String, nullable=False)
-    daily_budget = Column(Float, nullable=False)
-    season = Column(String, nullable=False)
+    currency = Column(String(10), nullable=False, default="IDR")
+    travel_month = Column(String(50), nullable=True)
+    category = Column(String(50), nullable=True)
+    daily_budget = Column(Float, nullable=True)
+    season = Column(String(50), nullable=True)
     ai_recommendation = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    owner = relationship("User", back_populates="trips")
