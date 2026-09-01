@@ -1,4 +1,22 @@
-﻿.env
-frontend/.env
+﻿# Environment Variables
 *.env
-node_modules/
+.env
+.env.*
+
+# Frontend / Next.js
+**/node_modules/
+**/.next/
+**/out/
+**/build/
+
+# Backend / Python
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/venv/
+
+# System / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

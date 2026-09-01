@@ -10,7 +10,7 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Mengecek 'access_token' atau 'token' di localStorage setiap kali rute berubah
+    // Mengecek token di localStorage setiap kali rute berubah
     const token = localStorage.getItem("access_token") || localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, [pathname]);
@@ -21,6 +21,12 @@ export default function Navbar() {
     setIsLoggedIn(false);
     router.push("/login");
   };
+
+  const navLinks = [
+    { href: "/", label: "Beranda" },
+    { href: "/generate", label: "Perencana AI" },
+    { href: "/assistant", label: "Asisten AI" },
+  ];
 
   return (
     <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -34,17 +40,33 @@ export default function Navbar() {
 
         {/* Menu Navigasi */}
         <nav className="flex items-center gap-6 text-sm font-semibold text-slate-600">
-          <Link href="/" className="hover:text-emerald-600 transition-colors">
-            Beranda
-          </Link>
-          
-          <Link href="/generate" className="hover:text-emerald-600 transition-colors">
-            Perencana AI
-          </Link>
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`transition-colors py-1 ${
+                  isActive
+                    ? "text-emerald-600 font-bold border-b-2 border-emerald-600"
+                    : "hover:text-emerald-600"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
 
           {isLoggedIn ? (
             <>
-              <Link href="/trips" className="hover:text-emerald-600 transition-colors">
+              <Link
+                href="/trips"
+                className={`transition-colors py-1 ${
+                  pathname === "/trips"
+                    ? "text-emerald-600 font-bold border-b-2 border-emerald-600"
+                    : "hover:text-emerald-600"
+                }`}
+              >
                 Riwayat Trip
               </Link>
               <button
@@ -56,7 +78,12 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/login" className="hover:text-emerald-600 transition-colors">
+              <Link
+                href="/login"
+                className={`transition-colors ${
+                  pathname === "/login" ? "text-emerald-600 font-bold" : "hover:text-emerald-600"
+                }`}
+              >
                 Masuk
               </Link>
               <Link

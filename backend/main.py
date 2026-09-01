@@ -20,13 +20,14 @@ from services.trip_service import (
     calculate_daily_budget
 )
 from services.bedrock_service import generate_travel_recommendation
+from services.kb_service import ask_knowledge_base
 
 # Membuat tabel di database otomatis jika belum ada
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="KelanaAI API",
-    description="Backend REST API dengan database PostgreSQL",
+    description="Backend REST API dengan database PostgreSQL & AWS Bedrock RAG Knowledge Base",
     version="0.1.0"
 )
 
@@ -55,6 +56,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+# === Pydantic Schemas Assistant RAG (Tugas Sesi 9) ===
+class AskRequest(BaseModel):
+    question: str
+
+class AskResponse(BaseModel):
+    question: str
+    answer: str
+    sources: List[str]
+
+
 # === Endpoint Auth (Register & Login) ===
 @app.post("/api/v1/auth/register", status_code=status.HTTP_201_CREATED, tags=["Auth"])
 def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
@@ -66,7 +77,6 @@ def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
             detail="Email sudah terdaftar"
         )
     
-    # Fleksibel menerima input 'username' dari frontend Next.js maupun 'name'
     display_name = user_data.username or user_data.name or user_data.email.split("@")[0]
     
     hashed_pwd = auth.hash_password(user_data.password)
@@ -105,6 +115,30 @@ def get_current_user_profile(current_user: models.User = Depends(auth.get_curren
     }
 
 
+# === Endpoint Assistant RAG Bedrock (Tugas Sesi 9) ===
+@app.post("/api/v1/assistant", response_model=AskResponse, tags=["Assistant"])
+def assistant_endpoint(payload: AskRequest):
+    """Mengirim pertanyaan ke AWS Bedrock Knowledge Base RAG dan mengembalikan jawaban beserta sitasi sumber."""
+    if not payload.question.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pertanyaan tidak boleh kosong."
+        )
+    
+    try:
+        result = ask_knowledge_base(payload.question)
+        return {
+            "question": payload.question,
+            "answer": result["answer"],
+            "sources": result["sources"]
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
 # === Endpoint Recommendations & Transportations ===
 @app.get("/api/v1/recommendations", response_model=List[str], tags=["Recommendations"])
 def get_recommendations():
@@ -117,7 +151,6 @@ def get_transportations():
 
 
 # === Endpoint CRUD Trips (Protected) ===
-
 @app.post("/api/v1/trips", response_model=schemas.TripResponse, status_code=status.HTTP_201_CREATED, tags=["Trips"])
 def create_trip(
     trip: schemas.TripCreate, 

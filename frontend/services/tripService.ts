@@ -6,19 +6,33 @@ export interface TripInput {
   budget: number;
   currency?: string;
   travel_month?: string;
+  category?: string;
 }
 
 export interface Trip {
-  id: number;
+  id: number | string;
   destination: string;
   days: number;
-  budget: number;
+  budget: number | string;
   currency: string;
   travel_month?: string;
   category?: 'Backpacker' | 'Standard' | 'Luxury' | string;
   daily_budget?: number;
   season?: string;
   ai_recommendation?: string;
+  
+  // Field opsional untuk UI frontend
+  travel_style?: string;
+  recommendation?: any;
+  duration?: string;
+  status?: string;
+  createdAt?: string;
+  description?: string;
+  itinerary?: {
+    day: number;
+    title: string;
+    activities: string[];
+  }[];
 }
 
 export async function getTrips(): Promise<Trip[]> {
