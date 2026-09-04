@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { apiFetch } from "@/services/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,22 +18,30 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/auth/login", {
+      // Menggunakan apiFetch agar mengarah ke 127.0.0.1:8000/api/v1/auth/login
+      const res = await apiFetch("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         throw new Error(data.detail || "Email atau password salah.");
       }
 
-      localStorage.setItem("token", data.access_token);
-      router.push("/trips");
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+        router.push("/assistant"); // Mengarahkan ke halaman asisten setelah login
+      } else {
+        throw new Error("Token tidak ditemukan dalam respon server.");
+      }
     } catch (err: any) {
-      setError(err.message);
+      if (err.message === "Failed to fetch") {
+        setError("Gagal terhubung ke server backend. Pastikan Uvicorn berjalan di port 8000.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }

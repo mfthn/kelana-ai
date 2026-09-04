@@ -22,6 +22,9 @@ from services.trip_service import (
 from services.bedrock_service import generate_travel_recommendation
 from services.kb_service import ask_knowledge_base
 
+# --- TAMBAHAN IMPORT ROUTER CONVERSATIONS ---
+from routers import conversations
+
 # Membuat tabel di database otomatis jika belum ada
 models.Base.metadata.create_all(bind=engine)
 
@@ -42,6 +45,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- DAFTARKAN ROUTER CONVERSATIONS KE APLIKASI ---
+app.include_router(conversations.router, prefix="/api/v1")
 
 
 # === Pydantic Schemas Auth ===

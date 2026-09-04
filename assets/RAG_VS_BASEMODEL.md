@@ -2,9 +2,9 @@
 
 Berikut adalah evaluasi perbandingan kualitas jawaban antara sistem **RAG (KelanaAI)** yang terhubung ke Knowledge Base AWS Bedrock dengan **Base Model (LLM Murni)** tanpa konteks dokumen.
 
-![Perbandingan RAG vs Base Model 1](./assets/rag_vs_basemodel_1.png)
+![Perbandingan RAG vs Base Model 1](/assets/rag_vs_basemodel_1.png)
 
-![Perbandingan RAG vs Base Model 2](./assets/rag_vs_basemodel_2.png)
+![Perbandingan RAG vs Base Model 2](/assets/rag_vs_basemodel_2.png)
 
 ---
 

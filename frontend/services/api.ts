@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+// Gunakan 127.0.0.1 secara eksplisit untuk menghindari konflik IPv6 (::1) pada Windows
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
 export function getAuthHeaders(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -11,7 +12,7 @@ export function getAuthHeaders(): Record<string, string> {
 export async function apiFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
   const defaultHeaders = getAuthHeaders();
   
-  // Memastikan endpoint selalu diawali dengan slash (/) untuk menghindari URL rusak
+  // Memastikan endpoint selalu diawali dengan slash (/)
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
   const res = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
@@ -32,3 +33,56 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}): Pro
 
   return res;
 }
+
+// Wrapper objek 'api' untuk mendukung pemanggilan method (api.get, api.post, dll) pada chatService.ts
+export const api = {
+  get: async <T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T }> => {
+    const res = await apiFetch(endpoint, { method: "GET", ...options });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw { response: { data: errorData, status: res.status } };
+    }
+    const data = await res.json();
+    return { data };
+  },
+
+  post: async <T>(endpoint: string, body?: any, options: RequestInit = {}): Promise<{ data: T }> => {
+    const res = await apiFetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify(body),
+      ...options,
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw { response: { data: errorData, status: res.status } };
+    }
+    const data = await res.json();
+    return { data };
+  },
+
+  patch: async <T>(endpoint: string, body?: any, options: RequestInit = {}): Promise<{ data: T }> => {
+    const res = await apiFetch(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      ...options,
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw { response: { data: errorData, status: res.status } };
+    }
+    const data = await res.json();
+    return { data };
+  },
+
+  delete: async <T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T }> => {
+    const res = await apiFetch(endpoint, { method: "DELETE", ...options });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw { response: { data: errorData, status: res.status } };
+    }
+    const data = await res.json();
+    return { data };
+  },
+};
+
+export default api;
